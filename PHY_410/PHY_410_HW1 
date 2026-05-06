@@ -1,0 +1,58 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Initial conditions
+y0, v0, a0, j = 0.0, 5.0, 2.0, 1.0
+t_final = 10.0
+
+# Analytical solutions
+def y_analytical(t): return y0 + v0*t + 0.5*a0*t**2 + (1/6)*j*t**3
+
+# Vectorized Euler's method
+def euler(dt):
+    t = np.arange(0, t_final + dt, dt)
+    y = np.zeros(len(t))
+    v = np.zeros(len(t))
+    a = np.zeros(len(t))
+    
+    y[0], v[0], a[0] = y0, v0, a0
+    
+    for i in range(len(t)-1):
+        y[i+1] = y[i] + v[i] * dt
+        v[i+1] = v[i] + a[i] * dt
+        a[i+1] = a[i] + j * dt
+    
+    return t, y
+
+# Run simulations
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+t_exact = np.linspace(0, t_final, 1000)
+ax1.plot(t_exact, y_analytical(t_exact), 'k--', linewidth=2, label='Analytical')
+
+for dt, color, label in [(0.1, 'blue', 'dt=0.1'), (0.2, 'green', 'dt=0.2'), (0.4, 'red', 'dt=0.4')]:
+    t, y = euler(dt)
+    error = np.abs(y - y_analytical(t))
+    
+    ax1.plot(t, y, 'o-', color=color, label=label, markersize=4)
+    ax2.semilogy(t, error, 'o-', color=color, label=label, markersize=4)
+    
+    print(f"{label}: Final y = {y[-1]:.2f} m, Max error = {error.max():.2f} m")
+
+ax1.set_xlabel('Time (s)')
+ax1.set_ylabel('Position (m)')
+ax1.set_title('Position vs Time')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('Error (m)')
+ax2.set_title('Position Error (Log Scale)')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('/mnt/user-data/outputs/euler_simple.png', dpi=150)
+print(f"\nAnalytical: y({t_final}) = {y_analytical(t_final):.2f} m")
+
+
